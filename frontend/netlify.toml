@@ -1,0 +1,12 @@
+[build]
+  # The command Netlify runs to build your app during deployment
+  command = "npm install && npm run build"
+  
+  # The folder Netlify serves to your visitors (Vite's build output)
+  publish = "dist"
+
+# This handles React Router paths, ensuring refreshing the page doesn't give a 404
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

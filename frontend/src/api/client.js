@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const client = axios.create({
-  baseURL: "http://localhost:8000/api",
+  baseURL: "https://ai-marketing-engine-lvty.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },

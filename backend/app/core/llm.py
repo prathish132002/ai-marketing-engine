@@ -1,25 +1,26 @@
 """
-Groq API client wrapper.
-All AI calls in this project go through this module.
-We use Llama 3 70B for the highest quality logical reasoning and strict JSON generation.
+xAI (Grok) API client wrapper.
+Uses the OpenAI-compatible SDK to talk to xAI's models.
 """
 import json
-from groq import Groq
+import openai
 from app.core.config import settings
 
-_client = Groq(api_key=settings.groq_api_key)
+_client = openai.OpenAI(
+    api_key=settings.xai_api_key,
+    base_url="https://api.x.ai/v1",
+)
 
-MODEL = "llama3-70b-8192"
+MODEL = "grok-2-1212" # Or grok-beta
 
 def call_llm(system_prompt: str, user_prompt: str, max_tokens: int = 4000) -> dict:
     """
-    Call the Groq API and return parsed JSON from the response.
-    Raises ValueError if the response cannot be parsed as JSON.
+    Call the xAI API and return parsed JSON from the response.
     """
     completion = _client.chat.completions.create(
         model=MODEL,
         messages=[
-            {"role": "system", "content": system_prompt + "\nIMPORTANT: You must return ONLY raw JSON matching the schema requested. No prose, no markdown formatting blocks."},
+            {"role": "system", "content": system_prompt + "\nIMPORTANT: You must return ONLY raw JSON matching the schema requested."},
             {"role": "user", "content": user_prompt}
         ],
         temperature=0.7,
@@ -29,7 +30,7 @@ def call_llm(system_prompt: str, user_prompt: str, max_tokens: int = 4000) -> di
     
     raw = completion.choices[0].message.content.strip()
 
-    # Strip markdown fences if model wraps output despite instructions
+    # Strip markdown fences
     if raw.startswith("```"):
         raw = raw.split("```")[1]
         if raw.startswith("json"):
@@ -39,4 +40,4 @@ def call_llm(system_prompt: str, user_prompt: str, max_tokens: int = 4000) -> di
     try:
         return json.loads(raw)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to parse JSON from LLM: {str(e)}\nRaw output: {raw}")
+        raise ValueError(f"Failed to parse JSON from xAI: {str(e)}\nRaw output: {raw}")
