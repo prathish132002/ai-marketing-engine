@@ -3,6 +3,8 @@ import useGenerate from "../hooks/useGenerate";
 import useBrandStore from "../store/brandStore";
 import FormatTabs, { TABS } from "../components/content/FormatTabs";
 import ContentCard from "../components/content/ContentCard";
+// eslint-disable-next-line no-unused-vars
+const _TABS = TABS;
 
 // ── Accent colours per format ───────────────────────────────────────────────
 const FORMAT_ACCENT = {
@@ -281,39 +283,69 @@ function SeoPanel({ data, brand, onRegenerate }) {
 
 export default function ContentHub() {
   const brand = useBrandStore((s) => s.brand);
+  const isConfigured = useBrandStore((s) => s.isConfigured);
   const [topic, setTopic] = useState("");
   const [activeTab, setActiveTab] = useState("linkedin");
+  const [showHelp, setShowHelp] = useState(false);
   const { data, loading, error, generate, reset } = useGenerate();
+
+  // Use the DB id if we have it, otherwise fall back to 1 (first saved brand)
+  const resolvedBrandId = brand?.brandId || 1;
 
   const handleGenerate = async () => {
     if (!topic.trim()) return;
-    if (!brand?.id) {
-      alert("Please complete Brand Setup first.");
+    if (!isConfigured) {
+      alert("Please complete Brand Setup (Module 1) first and click Save.");
       return;
     }
-    await generate({ brandId: brand.id, topic });
+    await generate({ brandId: resolvedBrandId, topic });
     setActiveTab("linkedin");
   };
 
-  const handleRegenerate = async (format) => {
-    // Full regenerate — could be scoped per-format in v2
-    await generate({ brandId: brand.id, topic });
+  const handleRegenerate = async () => {
+    await generate({ brandId: resolvedBrandId, topic });
   };
 
   const sharedProps = { brand: brand || {}, onRegenerate: handleRegenerate };
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* How to Use Banner */}
+      <div className="bg-violet-50 border-b border-violet-100">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-violet-500 text-sm">💡</span>
+            <p className="text-xs text-violet-700 font-medium">
+              <strong>How to use:</strong> Type a content topic below and click <strong>Generate All</strong> to create LinkedIn, Instagram, Twitter, Video, Email, Blog, Google Ad, and SEO content in one click.
+            </p>
+          </div>
+          <button onClick={() => setShowHelp(!showHelp)} className="text-xs text-violet-600 hover:underline ml-4 shrink-0">
+            {showHelp ? "Hide ▲" : "Guide ▼"}
+          </button>
+        </div>
+        {showHelp && (
+          <div className="max-w-7xl mx-auto px-6 pb-3">
+            <ol className="space-y-1 text-xs text-violet-700">
+              <li>1. Make sure you've saved your brand in <strong>Module 1 (Brand Setup)</strong> first.</li>
+              <li>2. Type a <strong>content topic</strong> — e.g. "Why SMEs need AI-powered marketing in 2025".</li>
+              <li>3. Click <strong>Generate All</strong> and wait ~15 seconds for all 8 formats to be created.</li>
+              <li>4. Use the <strong>format tabs</strong> (LinkedIn, Instagram, Twitter…) to switch between content types.</li>
+              <li>5. Click <strong>Copy</strong> on any card to copy the content to your clipboard.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-gray-900 tracking-tight">Content Hub</h1>
             <p className="text-xs text-gray-500">
-              M2 · {brand ? (
-                <span className="font-medium text-gray-700">{brand.name}</span>
+              M2 · {isConfigured ? (
+                <span className="font-medium text-gray-700">{brand?.brandName}</span>
               ) : (
-                <span className="text-amber-600">No brand selected</span>
+                <span className="text-amber-600">⚠ Complete Brand Setup first</span>
               )}
             </p>
           </div>

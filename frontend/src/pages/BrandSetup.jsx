@@ -5,6 +5,7 @@ import { useState } from "react";
 import TonePicker from "../components/brand/TonePicker";
 import PlatformSelector from "../components/brand/PlatformSelector";
 import useBrandStore from "../store/brandStore";
+import { saveBrand } from "../api/brand";
 
 const INDUSTRIES = [
   "SaaS / Tech", "E-commerce", "Healthcare", "Finance", "Education",
@@ -38,7 +39,10 @@ export default function BrandSetup() {
 
   const [errors, setErrors] = useState({});
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
   const [activeSection, setActiveSection] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
 
   const update = (field, value) => {
     setForm((f) => ({ ...f, [field]: value }));
@@ -58,18 +62,46 @@ export default function BrandSetup() {
     return e;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const e = validate();
     if (Object.keys(e).length > 0) {
       setErrors(e);
-      // scroll to first error
       const firstKey = Object.keys(e)[0];
       document.getElementById(firstKey)?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-    setBrand(form);
-    setConfigured(true);
-    setSaved(true);
+    setSaving(true);
+    setSaveError(null);
+    try {
+      // Convert comma-strings to arrays for the API
+      const payload = {
+        name: form.brandName,
+        industry: form.industry,
+        audience: form.targetAudience,
+        tones: form.tones,
+        keywords_include: form.keywordsInclude
+          ? form.keywordsInclude.split(",").map((k) => k.trim()).filter(Boolean)
+          : [],
+        keywords_avoid: form.keywordsAvoid
+          ? form.keywordsAvoid.split(",").map((k) => k.trim()).filter(Boolean)
+          : [],
+        campaign_goal: form.campaignGoal,
+        platforms: form.platforms,
+      };
+      const saved_brand = await saveBrand(payload);
+      // Store the form data + the DB-returned id
+      setBrand({ ...form, brandId: saved_brand.id });
+      setConfigured(true);
+      setSaved(true);
+    } catch (err) {
+      setSaveError("Could not connect to server. Your settings are saved locally.");
+      // Still save locally so the user isn't blocked
+      setBrand(form);
+      setConfigured(true);
+      setSaved(true);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const sections = ["Brand Identity", "Voice & Tone", "Keywords", "Campaign"];
@@ -87,6 +119,36 @@ export default function BrandSetup() {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2]">
+      {/* How to Use Banner */}
+      <div className="bg-[#F0EDFF] border-b border-[#D4CAFF]">
+        <div className="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-[#6B4EFF] text-sm">💡</span>
+            <p className="text-xs text-[#5B3FCC] font-medium">
+              <strong>How to use:</strong> Fill in your brand details across all 4 sections, then click <strong>Save Brand Context</strong>. This unlocks all other modules.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowHelp(!showHelp)}
+            className="text-xs text-[#6B4EFF] hover:underline ml-4 shrink-0"
+          >
+            {showHelp ? "Hide guide ▲" : "Full guide ▼"}
+          </button>
+        </div>
+        {showHelp && (
+          <div className="max-w-3xl mx-auto px-6 pb-4">
+            <ol className="space-y-1.5 text-xs text-[#5B3FCC]">
+              <li>1. Enter your <strong>Brand Name</strong> and select your <strong>Industry</strong>.</li>
+              <li>2. Describe your <strong>Target Audience</strong> — be specific (age, interests, pain points).</li>
+              <li>3. Pick up to <strong>3 tones</strong> that best represent your brand voice.</li>
+              <li>4. Add <strong>Keywords to Include</strong> (words you always say) and <strong>Keywords to Avoid</strong> (words you never use).</li>
+              <li>5. Set your <strong>Campaign Goal</strong> (awareness, leads, sales etc.) and select your <strong>Target Platforms</strong>.</li>
+              <li>6. Click <strong>Save Brand Context</strong> — all other modules will now use this to generate on-brand content.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#E8E6DF] px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -106,13 +168,14 @@ export default function BrandSetup() {
           </div>
           <button
             onClick={handleSave}
+            disabled={saving}
             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
               saved
                 ? "bg-[#E1F5EE] text-[#0F6E56]"
-                : "bg-[#8B6CF6] text-white hover:bg-[#7B5CE5] active:scale-95"
+                : "bg-[#8B6CF6] text-white hover:bg-[#7B5CE5] active:scale-95 disabled:opacity-50"
             }`}
           >
-            {saved ? "✓ Saved" : "Save Brand Context"}
+            {saving ? "Saving…" : saved ? "✓ Saved" : "Save Brand Context"}
           </button>
         </div>
       </div>
@@ -260,20 +323,26 @@ export default function BrandSetup() {
         </Section>
 
         {/* Save footer */}
-        <div className="mt-8 flex items-center justify-between p-5 bg-white rounded-2xl border border-[#E8E6DF]">
+        {saveError && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800">
+            ⚠ {saveError}
+          </div>
+        )}
+        <div className="mt-4 flex items-center justify-between p-5 bg-white rounded-2xl border border-[#E8E6DF]">
           <div>
             <p className="text-sm font-semibold text-[#1A1A18]">Ready to save?</p>
             <p className="text-xs text-[#9B9892] mt-0.5">Brand context will be injected into every AI prompt across all modules</p>
           </div>
           <button
             onClick={handleSave}
+            disabled={saving}
             className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
               saved
                 ? "bg-[#E1F5EE] text-[#0F6E56]"
-                : "bg-[#8B6CF6] text-white hover:bg-[#7B5CE5] active:scale-95 shadow-md shadow-purple-200"
+                : "bg-[#8B6CF6] text-white hover:bg-[#7B5CE5] active:scale-95 shadow-md shadow-purple-200 disabled:opacity-50"
             }`}
           >
-            {saved ? "✓ Brand Saved" : "Save Brand Context"}
+            {saving ? "Saving…" : saved ? "✓ Brand Saved" : "Save Brand Context"}
           </button>
         </div>
 

@@ -6,6 +6,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 const DEFAULT_BRAND = {
+  brandId: null,           // DB id returned after first POST to /api/brand/
   brandName: "",
   industry: "",
   targetAudience: "",
