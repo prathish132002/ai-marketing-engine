@@ -2,7 +2,7 @@
 Ad Copy Service — Module 4.
 Generates multivariant ad copy for A/B testing.
 """
-from app.core.claude import call_claude
+from app.core.llm import call_llm
 from app.core.prompts import AD_COPY_SYSTEM, ad_copy_prompt
 from app.schemas.ads import AdCopyResponse
 
@@ -26,7 +26,7 @@ def generate_ad_variants(
         offer=offer
     )
 
-    raw = call_claude(
+    raw = call_llm(
         system_prompt=AD_COPY_SYSTEM,
         user_prompt=user_prompt,
         max_tokens=2000,

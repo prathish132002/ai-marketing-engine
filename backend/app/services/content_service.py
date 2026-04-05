@@ -3,7 +3,7 @@ Content Service — Module 2: Content Generation Hub.
 All AI generation logic lives here; routes stay thin.
 """
 import json
-from app.core.claude import call_claude
+from app.core.llm import call_llm
 from app.core.prompts import (
     CONTENT_GENERATION_SYSTEM,
     content_generation_prompt,
@@ -41,7 +41,7 @@ def generate_content_suite(
         topic=topic,
     )
 
-    raw = call_claude(
+    raw = call_llm(
         system_prompt=CONTENT_GENERATION_SYSTEM,
         user_prompt=user_prompt,
         max_tokens=6000,
@@ -88,5 +88,5 @@ Return ONLY JSON:
 }}
 """
 
-    raw = call_claude(system_prompt=system, user_prompt=user, max_tokens=1000)
+    raw = call_llm(system_prompt=system, user_prompt=user, max_tokens=1000)
     return ContentRefinementResponse(**raw)

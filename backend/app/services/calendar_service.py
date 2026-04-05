@@ -2,7 +2,7 @@
 Calendar Service — Module 6.
 Generates a monthly content schedule based on brand, platforms and goals.
 """
-from app.core.claude import call_claude
+from app.core.llm import call_llm
 from app.core.prompts import calendar_suggestion_prompt
 from app.schemas.calendar import CalendarResponse
 
@@ -26,7 +26,7 @@ def generate_calendar(
         "engagement times and varying content types across the specified platforms."
     )
 
-    raw = call_claude(
+    raw = call_llm(
         system_prompt=system_prompt,
         user_prompt=user_prompt,
         max_tokens=2500,

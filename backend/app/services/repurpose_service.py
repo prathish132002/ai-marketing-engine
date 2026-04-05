@@ -2,7 +2,7 @@
 Repurpose Service — Module 3.
 Reads transcript, extracted insights, generates formats.
 """
-from app.core.claude import call_claude
+from app.core.llm import call_llm
 from app.core.prompts import (
     REPURPOSE_EXTRACTION_PROMPT,
     content_generation_prompt,
@@ -52,7 +52,7 @@ Since this is a repurpose request, you must wrap the entire output in a root JSO
 2. "generated_content": containing the exact JSON structure defined above.
 """
 
-    raw = call_claude(
+    raw = call_llm(
         system_prompt=REPURPOSE_EXTRACTION_PROMPT,
         user_prompt=user_prompt,
         max_tokens=6000,
