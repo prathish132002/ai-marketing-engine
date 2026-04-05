@@ -32,24 +32,51 @@ const getBadgeStyle = (platformStr) => {
 
 export default function Calendar() {
   const brand = useBrandStore((s) => s.brand);
+  const isConfigured = useBrandStore((s) => s.isConfigured);
   const [monthInput, setMonthInput] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data, loading, error, generate, reset } = useCalendar();
+  const resolvedBrandId = brand?.brandId || 1;
 
   const handleGenerate = async () => {
     if (!monthInput) return;
-    if (!brand?.brandName && !brand?.id) {
-      alert("Please complete Brand Setup first.");
+    if (!isConfigured) {
+      alert("Please complete Brand Setup (Module 1) first and click Save.");
       return;
     }
     const formattedMonth = formatMonthLabel(monthInput);
-    
-    // Hardcoding brandId=1 since auth/db isn't completely wired to the frontend yet 
-    await generate({ brandId: brand.id || 1, month: formattedMonth });
+    await generate({ brandId: resolvedBrandId, month: formattedMonth });
   };
 
   return (
     <div className="min-h-screen bg-[#F7F6F2]">
+      {/* How to Use Banner */}
+      <div className="bg-sky-50 border-b border-sky-100">
+        <div className="max-w-4xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sky-500 text-sm">💡</span>
+            <p className="text-xs text-sky-800 font-medium">
+              <strong>How to use:</strong> Pick a month and click <strong>Generate Timeline</strong> to get a full 20–25 post content calendar with optimal posting times for each platform.
+            </p>
+          </div>
+          <button onClick={() => setShowHelp(!showHelp)} className="text-xs text-sky-700 hover:underline ml-4 shrink-0">
+            {showHelp ? "Hide ▲" : "Guide ▼"}
+          </button>
+        </div>
+        {showHelp && (
+          <div className="max-w-4xl mx-auto px-6 pb-3">
+            <ol className="space-y-1 text-xs text-sky-800">
+              <li>1. Make sure your <strong>Brand Setup</strong> (Module 1) is saved, especially your <strong>Target Platforms</strong> and <strong>Campaign Goal</strong>.</li>
+              <li>2. Use the date picker to select the <strong>target month</strong> you want to plan content for.</li>
+              <li>3. Click <strong>Generate Timeline</strong> to create a full month of content suggestions.</li>
+              <li>4. Each card shows the <strong>recommended day, platform, content type, topic, and best posting time</strong>.</li>
+              <li>5. Use this as a guide to brief your team or schedule posts in your social media tool.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div className="sticky top-0 z-20 bg-white border-b border-[#E8E6DF] px-8 py-4 flex items-center justify-between">
         <div>

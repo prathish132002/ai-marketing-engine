@@ -7,24 +7,52 @@ const PLATFORMS = ["Meta Ads", "LinkedIn Ads", "Google Ads", "TikTok Ads", "Twit
 
 export default function AdVariants() {
   const brand = useBrandStore((s) => s.brand);
+  const isConfigured = useBrandStore((s) => s.isConfigured);
   const [product, setProduct] = useState("");
   const [offer, setOffer] = useState("");
   const [platform, setPlatform] = useState("Meta Ads");
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data, loading, error, generate, reset } = useAds();
+  const resolvedBrandId = brand?.brandId || 1;
 
   const handleGenerate = async () => {
     if (!product.trim() || !offer.trim()) return;
-    if (!brand?.brandName && !brand?.id) {
-      alert("Please complete Brand Setup first.");
+    if (!isConfigured) {
+      alert("Please complete Brand Setup (Module 1) first and click Save.");
       return;
     }
-    // Hardcoding brandId=1 since auth/db isn't completely wired to the frontend yet 
-    await generate({ brandId: brand.id || 1, product, offer, platform });
+    await generate({ brandId: resolvedBrandId, product, offer, platform });
   };
 
   return (
     <div className="min-h-screen bg-[#F7F6F2]">
+      {/* How to Use Banner */}
+      <div className="bg-rose-50 border-b border-rose-100">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-rose-500 text-sm">💡</span>
+            <p className="text-xs text-rose-800 font-medium">
+              <strong>How to use:</strong> Enter your product name and core offer, choose a platform, then click <strong>Generate Variants</strong> to get 5 A/B-ready ad copies with different psychological angles.
+            </p>
+          </div>
+          <button onClick={() => setShowHelp(!showHelp)} className="text-xs text-rose-700 hover:underline ml-4 shrink-0">
+            {showHelp ? "Hide ▲" : "Guide ▼"}
+          </button>
+        </div>
+        {showHelp && (
+          <div className="max-w-7xl mx-auto px-6 pb-3">
+            <ol className="space-y-1 text-xs text-rose-800">
+              <li>1. Select the <strong>Target Platform</strong> where you plan to run the ad (Meta, LinkedIn, Google…).</li>
+              <li>2. Enter your <strong>Product / Service Name</strong> — be concise.</li>
+              <li>3. Enter the <strong>Offer / Core Hook</strong> — e.g. "Save 50% on annual plans, today only".</li>
+              <li>4. Click <strong>Generate Variants</strong> to receive 5 ads using Emotional, Logical, Urgency, Social Proof and Curiosity angles.</li>
+              <li>5. Compare the variants side by side to pick the best one for A/B testing.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div className="sticky top-0 z-20 bg-white border-b border-[#E8E6DF] px-8 py-4 flex items-center justify-between">
         <div>

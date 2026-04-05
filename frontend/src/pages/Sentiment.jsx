@@ -4,22 +4,50 @@ import useSentiment from "../hooks/useSentiment";
 
 export default function Sentiment() {
   const brand = useBrandStore((s) => s.brand);
+  const isConfigured = useBrandStore((s) => s.isConfigured);
   const [reviews, setReviews] = useState("");
+  const [showHelp, setShowHelp] = useState(false);
 
   const { data, loading, error, analyze, reset } = useSentiment();
+  const resolvedBrandId = brand?.brandId || 1;
 
   const handleAnalyze = async () => {
     if (!reviews.trim()) return;
-    if (!brand?.brandName && !brand?.id) {
-      alert("Please complete Brand Setup first.");
+    if (!isConfigured) {
+      alert("Please complete Brand Setup (Module 1) first and click Save.");
       return;
     }
-    // Hardcoding brandId=1 since auth/db isn't completely wired to the frontend yet 
-    await analyze({ brandId: brand.id || 1, reviews_text: reviews });
+    await analyze({ brandId: resolvedBrandId, reviews_text: reviews });
   };
 
   return (
     <div className="min-h-screen bg-[#F7F6F2]">
+      {/* How to Use Banner */}
+      <div className="bg-emerald-50 border-b border-emerald-100">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-emerald-600 text-sm">💡</span>
+            <p className="text-xs text-emerald-800 font-medium">
+              <strong>How to use:</strong> Paste raw customer reviews from any platform and click <strong>Analyze Sentiment</strong> to get an instant VoC (Voice of Customer) breakdown with actionable insights.
+            </p>
+          </div>
+          <button onClick={() => setShowHelp(!showHelp)} className="text-xs text-emerald-700 hover:underline ml-4 shrink-0">
+            {showHelp ? "Hide ▲" : "Guide ▼"}
+          </button>
+        </div>
+        {showHelp && (
+          <div className="max-w-7xl mx-auto px-6 pb-3">
+            <ol className="space-y-1 text-xs text-emerald-800">
+              <li>1. Copy reviews from <strong>Trustpilot, G2, Amazon, App Store</strong> or any review platform.</li>
+              <li>2. Paste them all into the text box — you can paste multiple reviews at once.</li>
+              <li>3. Click <strong>Analyze Sentiment</strong> to process the reviews.</li>
+              <li>4. View the <strong>Overall Health Score</strong>, positive/neutral/negative breakdown, and top themes.</li>
+              <li>5. Read the <strong>Strategic Recommendations</strong> to learn how to improve your product messaging.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div className="sticky top-0 z-20 bg-white border-b border-[#E8E6DF] px-8 py-4 flex items-center justify-between">
         <div>

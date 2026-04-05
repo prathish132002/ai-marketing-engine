@@ -3,6 +3,8 @@ import useBrandStore from "../store/brandStore";
 import useRepurpose from "../hooks/useRepurpose";
 import FormatTabs from "../components/content/FormatTabs";
 import ContentCard from "../components/content/ContentCard";
+// eslint-disable-next-line no-unused-vars
+const _FormatTabs = FormatTabs;
 
 function LinkedInPanel({ data, brand }) {
   if (!data?.variants) return null;
@@ -46,19 +48,22 @@ function TwitterPanel({ data, brand }) {
 
 export default function Repurpose() {
   const brand = useBrandStore((s) => s.brand);
+  const isConfigured = useBrandStore((s) => s.isConfigured);
   const [transcript, setTranscript] = useState("");
   const [activeTab, setActiveTab] = useState("coverage");
+  const [showHelp, setShowHelp] = useState(false);
   
   const { data, loading, error, generate, reset } = useRepurpose();
 
+  const resolvedBrandId = brand?.brandId || 1;
+
   const handleGenerate = async () => {
     if (!transcript.trim()) return;
-    if (!brand?.brandName && !brand?.id) {
-      alert("Please complete Brand Setup first.");
+    if (!isConfigured) {
+      alert("Please complete Brand Setup (Module 1) first and click Save.");
       return;
     }
-    // Hardcoding brandId=1 since auth/db isn't completely wired to the frontend yet 
-    await generate({ brandId: brand.id || 1, transcript, topic: "Repurpose" });
+    await generate({ brandId: resolvedBrandId, transcript, topic: "Repurpose" });
     setActiveTab("coverage");
   };
 
@@ -68,6 +73,31 @@ export default function Repurpose() {
 
   return (
     <div className="min-h-screen bg-[#F7F6F2]">
+      {/* How to Use Banner */}
+      <div className="bg-amber-50 border-b border-amber-100">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-500 text-sm">💡</span>
+            <p className="text-xs text-amber-800 font-medium">
+              <strong>How to use:</strong> Paste any blog post, podcast transcript, or webinar text and click <strong>Extract &amp; Repurpose</strong> to automatically generate social media assets.
+            </p>
+          </div>
+          <button onClick={() => setShowHelp(!showHelp)} className="text-xs text-amber-700 hover:underline ml-4 shrink-0">
+            {showHelp ? "Hide ▲" : "Guide ▼"}
+          </button>
+        </div>
+        {showHelp && (
+          <div className="max-w-7xl mx-auto px-6 pb-3">
+            <ol className="space-y-1 text-xs text-amber-800">
+              <li>1. Copy a full blog post, podcast transcript, or webinar recording text.</li>
+              <li>2. Paste it into the text box below — the more content, the better the output.</li>
+              <li>3. Click <strong>Extract &amp; Repurpose</strong>. The AI will identify the main thesis, key insights and memorable quotes.</li>
+              <li>4. Switch between <strong>Coverage Map</strong>, <strong>LinkedIn Assets</strong> and <strong>Twitter Assets</strong> tabs to view generated content.</li>
+            </ol>
+          </div>
+        )}
+      </div>
+
       {/* Top bar */}
       <div className="sticky top-0 z-20 bg-white border-b border-[#E8E6DF] px-8 py-4 flex items-center justify-between">
         <div>
